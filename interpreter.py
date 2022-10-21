@@ -2,7 +2,7 @@
 #
 # EOF (end-of-file) token is used to indicate that
 # there is no more input left for lexical analysis
-INTEGER, PLUS, EOF = 'INTEGER', 'PLUS', 'EOF'
+INTEGER, PLUS, MINUS, EOF = 'INTEGER', 'PLUS', 'MINUS', 'EOF'
 
 
 class Token(object):
@@ -58,17 +58,41 @@ class Interpreter(object):
         # what token to create based on the single character
         current_char = text[self.pos]
 
+        # skip spaces
+        if current_char == ' ':
+            self.pos += 1
+            while self.pos <= (len(text) - 1):
+                current_char = text[self.pos]
+                if current_char != ' ':
+                    break
+                else:
+                    self.pos += 1
+
         # if the character is a digit then convert it to
         # integer, create an INTEGER token, increment self.pos
         # index to point to the next character after the digit,
         # and return the INTEGER token
+
         if current_char.isdigit():
-            token = Token(INTEGER, int(current_char))
+            operator = current_char
             self.pos += 1
+            while self.pos <= (len(text) - 1):
+                current_char = text[self.pos]
+                if not current_char.isdigit():
+                    break
+                else:
+                    operator += current_char
+                    self.pos += 1
+            token = Token(INTEGER, int(operator))
             return token
 
         if current_char == '+':
             token = Token(PLUS, current_char)
+            self.pos += 1
+            return token
+
+        if current_char == '-':
+            token = Token(MINUS, current_char)
             self.pos += 1
             return token
 
@@ -95,7 +119,7 @@ class Interpreter(object):
 
         # we expect the current token to be a '+' token
         op = self.current_token
-        self.eat(PLUS)
+        self.eat(op.type)
 
         # we expect the current token to be a single-digit integer
         right = self.current_token
@@ -107,7 +131,10 @@ class Interpreter(object):
         # has been successfully found and the method can just
         # return the result of adding two integers, thus
         # effectively interpreting client input
-        result = left.value + right.value
+        if op.type == 'PLUS':
+            result = left.value + right.value
+        elif op.type == 'MINUS':
+            result = left.value - right.value
         return result
 
 
